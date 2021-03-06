@@ -1,7 +1,6 @@
-const {InfluxDB} = require('@influxdata/influxdb-client');
+const {InfluxDB, Point} = require('@influxdata/influxdb-client');
 const fs = require('fs');
 const path = require('path');
-const {Point} = require('@influxdata/influxdb-client');
 const IPInfo = require('node-ipinfo');
 const express = require('express');
 require('dotenv').config();
@@ -14,6 +13,8 @@ writeApi.useDefaultTags({host: 'ipinfo.local'})
 
 var app = express();
 var ipinfo = new IPInfo(process.env.IPINFO_TOKEN);
+
+app.set('trust proxy', true);
 
 function sleep(timeout = 1) {
   return new Promise((res, rej) => {
@@ -36,7 +37,7 @@ async function getIpInfo(ip) {
 }
 
 app.get('/*', async (req, res) => {
-  var ip = req.ip;
+  var ip = req.ips[0]?req.ips[0]:req.ip;
   var start = new Date();
   var point = new Point('user_request');
   point.tag('method', 'get');
